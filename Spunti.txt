@@ -1,0 +1,7 @@
+Spunti di lavoro
+
+Importare argparse
+Lavorare per ottimizzare al massimo le prestazioni (check su utilizzo memoria, tempo necessario all'elaborazione ecc...)
+Upload del diagramma delle classi che utilizzeremo nell'esercizio
+Utilizzeremo gli istogrammi nella visualizzazione dei dati
+In output ci sarà al massimo il grafico di un singolo quartiere per un certo periodo di tempo (giorno,mese,anno), specificati in input dall'utente 
