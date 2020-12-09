@@ -1,7 +1,14 @@
 Spunti di lavoro
 
-Importare argparse
-Lavorare per ottimizzare al massimo le prestazioni (check su utilizzo memoria, tempo necessario all'elaborazione ecc...)
-Upload del diagramma delle classi che utilizzeremo nell'esercizio
-Utilizzeremo gli istogrammi nella visualizzazione dei dati
-In output ci sarà al massimo il grafico di un singolo quartiere per un certo periodo di tempo (giorno,mese,anno), specificati in input dall'utente 
+Leonardo = Project Manager  ||  Lorenzo = Project Supervisor (Scrum Master)
+
+#SPECIFICHEREMO LA GRADUATORIA DEL COMMIT (PRIMO,SECONDO...) E ALLA FINE DEL COMMENTO SCRIVEREMO IL NOSTRO NOME
+
+Rivedere i principi scrum.
+Importare argparse.
+Lavorare per ottimizzare al massimo le prestazioni (check su utilizzo memoria, tempo necessario all'elaborazione ecc...).
+Upload del diagramma delle classi che utilizzeremo nell'esercizio.
+Utilizzeremo gli istogrammi nella visualizzazione dei dati.
+In output ci sarà al massimo il grafico di un singolo quartiere per un certo periodo di tempo (giorno,mese,anno), specificati in input dall'utente.
+Calcoleremo il costo medio per un miglio per utilizzi chiariti nelle voci successive.
+I valori nulli nei 'mileage' (non so il termine in italiano, è chilometraggio ma con le miglia) li sostituiremo in base all'importo pagato a fine corsa.
