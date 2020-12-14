@@ -28,27 +28,32 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 import time 
 import collections
-from datetime import date 
+from datetime import date,datetime
 
 start = time.perf_counter()
 #specifichiamo le colonne da leggere così da migliorare le prestazioni
 #confrontiamo i tempi di caricamento con e senza le colonne superflue 
-df = pd.read_csv("C:/Users/lollo/Downloads/yellow_tripdata_2020-01.csv",
-                    usecols = ['tpep_pickup_datetime', 
+df = pd.read_csv("C:/Users/leona/OneDrive/Documenti/pyprogram/yellow_tripdata_2020-01.csv",
+                    usecols = ['tpep_dropoff_datetime', 
                                'DOLocationID'])
 
-zone = pd.read_csv("C:/Users/lollo/Downloads/taxi+_zone_lookup.csv")
-
-df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
-df['tpep_pickup_datetime'] = df['tpep_pickup_datetime'].dt.date
-
-Giorno_NViaggi = pd.Series(collections.Counter(df['tpep_pickup_datetime']))
-# for data in Giorno_NViaggi.index:
-#     if date.year(data) != 2020 or date.month(data) != 1:
-#        Giorno_NViaggi.index.drop(data,axis=0)
 
 
-# plt.figure()
-# plt.hist(Giorno_NViaggi)
+#zone = pd.read_csv("C:/Users/lollo/Downloads/taxi+_zone_lookup.csv")
+
+df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+df['tpep_dropoff_datetime'] = df['tpep_dropoff_datetime'].dt.date
+
+Giorno_NViaggi = pd.Series(collections.Counter(df['tpep_dropoff_datetime']))
+
+#elimino tutte le date diverse da 01/2020
+for data in Giorno_NViaggi.index:
+    if data.year != 2020 or data.month != 1:
+        Giorno_NViaggi=Giorno_NViaggi.drop(data)
+
+
+
+plt.figure()
+plt.hist(Giorno_NViaggi)
 
 elapsed = time.perf_counter() - start
