@@ -36,7 +36,10 @@ import tqdm
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-i", "--in_data", help = "path del file dataset",
-                     type = str, default = './data/yellow_tripdata_2020-01.csv')
+                     type = str, default = './Data/yellow_tripdata_2020-01.csv')
+
+parser.add_argument("-i1", "--zone", help = "path del file dataset",
+                     type = str, default = './Data/taxi+_zone_lookup.csv')
 
 args = parser.parse_args()
 
@@ -47,23 +50,24 @@ start = time.perf_counter()
 df = pd.read_csv(args.in_data,usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
 
 
-#zone = pd.read_csv("C:/Users/lollo/Downloads/taxi+_zone_lookup.csv")
+zone = pd.read_csv(args.zone)
 
 
 df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
-df['tpep_dropoff_datetime'] = df['tpep_dropoff_datetime'].dt.date
 
 
 #elimino tutte le date diverse da 01/2020
-for data in df['tpep_dropoff_datetime']:
-    if data.year != 2020 or data.month != 1:
-        df = df.drop(df['tpep_dropoff_datetime'] = data, axis=1)
+df = df.loc[(df['tpep_dropoff_datetime'].dt.year == 2020) & (df['tpep_dropoff_datetime'].dt.month  == 1)]
+
+
+df['tpep_dropoff_datetime'] = df['tpep_dropoff_datetime'].dt.date
 
 
 Giorno_NViaggi = pd.Series(collections.Counter(df['tpep_dropoff_datetime']))
 
 
 Giorno_NViaggi = Giorno_NViaggi.sort_index()
+#rinominare le colonne di Giorno_NViaggi
 
 
 plt.figure()
