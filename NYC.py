@@ -29,31 +29,46 @@ import matplotlib.pyplot as plt
 import time 
 import collections
 from datetime import date,datetime
+import argparse
+import tqdm
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-i", "--in_data", help = "path del file dataset",
+                     type = str, default = './data/yellow_tripdata_2020-01.csv')
+
+args = parser.parse_args()
+
 
 start = time.perf_counter()
 #specifichiamo le colonne da leggere così da migliorare le prestazioni
 #confrontiamo i tempi di caricamento con e senza le colonne superflue 
-df = pd.read_csv("C:/Users/leona/OneDrive/Documenti/pyprogram/yellow_tripdata_2020-01.csv",
-                    usecols = ['tpep_dropoff_datetime', 
-                               'DOLocationID'])
-
+df = pd.read_csv(args.in_data,usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
 
 
 #zone = pd.read_csv("C:/Users/lollo/Downloads/taxi+_zone_lookup.csv")
 
+
 df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
 df['tpep_dropoff_datetime'] = df['tpep_dropoff_datetime'].dt.date
 
-Giorno_NViaggi = pd.Series(collections.Counter(df['tpep_dropoff_datetime']))
 
 #elimino tutte le date diverse da 01/2020
-for data in Giorno_NViaggi.index:
+for data in df['tpep_dropoff_datetime']:
     if data.year != 2020 or data.month != 1:
-        Giorno_NViaggi=Giorno_NViaggi.drop(data)
+        df = df.drop(df['tpep_dropoff_datetime'] = data, axis=1)
 
+
+Giorno_NViaggi = pd.Series(collections.Counter(df['tpep_dropoff_datetime']))
+
+
+Giorno_NViaggi = Giorno_NViaggi.sort_index()
 
 
 plt.figure()
-plt.hist(Giorno_NViaggi)
+Giorno_NViaggi.plot.bar(x = "Index", y = "0")
+plt.show()
+
 
 elapsed = time.perf_counter() - start
