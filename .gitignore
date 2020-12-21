@@ -1,2 +1,3 @@
 #ignoro le seguenti cartelle
-Data
+Data/*
+Results/*
