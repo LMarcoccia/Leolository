@@ -10,6 +10,7 @@ medio di viaggi registrati ogni giorno. A causa delle differenze tra le zone di 
 informazioni per ogni borough. Notate qualche differenza tra di loro? Qual è il mese con la media giornaliera più alta? E 
 invece quello con la media giornaliera più bassa?"""
 
+
 #aumentare il contatore del giorno di partenza
 #contatori messi in una serie
 #togliere i viaggi non 2020-gennaio
@@ -62,17 +63,24 @@ df = df.loc[(df['tpep_dropoff_datetime'].dt.year == 2020) & (df['tpep_dropoff_da
 
 df['tpep_dropoff_datetime'] = df['tpep_dropoff_datetime'].dt.date
 
+zone = zone.rename({'LocationID': 'DOLocationID'}, axis=1)
+df = pd.merge(df, zone, on=['DOLocationID'],how='left')
 
-Giorno_NViaggi = pd.Series(collections.Counter(df['tpep_dropoff_datetime']))
+
+dati_mese_zona=pd.DataFrame()
+for zona in df['Borough'].unique():
+    df_temp=df[df['Borough']==zona]
+    dati_mese_zona[zona] = pd.Series(collections.Counter(df_temp['tpep_dropoff_datetime']))
+    
 
 
-Giorno_NViaggi = Giorno_NViaggi.sort_index()
+
+dati_mese_zona = dati_mese_zona.sort_index()
 #rinominare le colonne di Giorno_NViaggi
-
-
 plt.figure()
-Giorno_NViaggi.plot.bar(x = "Index", y = "0")
-plt.show()
+for zona in df['Borough'].unique():
+    dati_mese_zona[zona].plot.bar()
+    plt.show()
 
 
 elapsed = time.perf_counter() - start
