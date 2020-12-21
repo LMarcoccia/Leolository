@@ -11,18 +11,6 @@ informazioni per ogni borough. Notate qualche differenza tra di loro? Qual è il
 invece quello con la media giornaliera più bassa?"""
 
 
-#aumentare il contatore del giorno di partenza
-#contatori messi in una serie
-#togliere i viaggi non 2020-gennaio
-#estrarre in automatico la lista dei giorni del mese a partire dal dataset
-#timedelta per vedere come assegnare il viaggio al giorno di partenza o a quello di arrivo 
-
-# =============================================================================
-# #giorno-numero_viaggi
-# #1 gennaio-x
-# #2 gennaio-y, 
-# =============================================================================
-
 #mettere argparse
 import pandas as pd
 #import memory_usage, time_elapsed, generalmente misuriamo le prestazioni 
@@ -42,12 +30,16 @@ parser.add_argument("-i", "--in_data", help = "path del file dataset",
 parser.add_argument("-i1", "--zone", help = "path del file dataset",
                      type = str, default = './Data/taxi+_zone_lookup.csv')
 
+#SISTEMARE IL PATH IN USCITA E CREARE LA CARTELLA RESULTS 
+parser.add_argument("-o", "--out_file", help = "cartella di deposito del file di uscita",
+                     type = str, default = './Results/{MESE}.csv')
+
 args = parser.parse_args()
 
 
 start = time.perf_counter()
-#specifichiamo le colonne da leggere così da migliorare le prestazioni
-#confrontiamo i tempi di caricamento con e senza le colonne superflue 
+
+ 
 df = pd.read_csv(args.in_data,usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
 
 
@@ -63,6 +55,7 @@ df = df.loc[(df['tpep_dropoff_datetime'].dt.year == 2020) & (df['tpep_dropoff_da
 
 df['tpep_dropoff_datetime'] = df['tpep_dropoff_datetime'].dt.date
 
+
 zone = zone.rename({'LocationID': 'DOLocationID'}, axis=1)
 df = pd.merge(df, zone, on=['DOLocationID'],how='left')
 
@@ -73,14 +66,11 @@ for zona in df['Borough'].unique():
     dati_mese_zona[zona] = pd.Series(collections.Counter(df_temp['tpep_dropoff_datetime']))
     
 
-
-
 dati_mese_zona = dati_mese_zona.sort_index()
-#rinominare le colonne di Giorno_NViaggi
-plt.figure()
 for zona in df['Borough'].unique():
     dati_mese_zona[zona].plot.bar()
-    plt.show()
+    plt.title(zona)
+    #plt.savefig(args.out_data) 
 
 
 elapsed = time.perf_counter() - start
