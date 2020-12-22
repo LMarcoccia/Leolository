@@ -35,7 +35,7 @@ parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
 
 args = parser.parse_args()
 
-#=============================================================================#
+#==================================================================================================================#
 
 start = time.perf_counter()
 
@@ -51,7 +51,9 @@ for i in args.mesi:
     df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
 
 
-#elimino tutte le date diverse da 01/2020
+    df = df.dropna(axis = 0, how = 'any')
+
+    
     df = df.loc[(df['tpep_dropoff_datetime'].dt.year == args.anno) & (df['tpep_dropoff_datetime'].dt.month  == int(i))]
 
 
@@ -72,7 +74,8 @@ for i in args.mesi:
         plt.figure()
         dati_mese_zona[zona].plot.bar()
         plt.title(zona)
-        plt.savefig(f"./Results/2020-0{i}_{zona}.pdf") 
+        plt.savefig(f"./Results/2020-0{i}-{zona}.pdf", dpi=300)
+        plt.close()
 
 
 elapsed = time.perf_counter() - start
