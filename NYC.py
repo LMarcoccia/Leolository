@@ -69,21 +69,25 @@ class ExtractInfo(Extractor):
     def crea_grafici(self,df,dati_mese_zona,mese):
         
         dati_mese_zona = dati_mese_zona.sort_index()
-        plt.figure()
-        #PER LEONARDO: direi di parametrizzare k e g con argparse, perchè non è detto che il programma
-        #dovrà analizzare 6 mesi o città con 7 quartieri
-        k = 1
-        g = 7
-        fig, axes = plt.subplots(k, g, figsize=(100,50))
-        fig.suptitle(mese)
-        for zona in df['Borough'].unique(): 
-            for s in range(g):
-                #PER LEONARDO: c'è un problema con gli indici, e secondo me i subplot non verranno nemmeno bene
-                #per ora lo lascio così, dopo lo ricontrollo e vedo se riesco a risolverlo
-                sns.barplot(ax = axes[0,s], x = dati_mese_zona['Index'], y = dati_mese_zona[zona] )
-                axes[0,s].set_title(zona)
-        plt.savefig(f"./Results/2020-{mese}/Subplot_zone.pdf", dpi = 300)
-        plt.close()
+        # plt.figure()
+        # k = 1
+        # g = 7    '''eventualmente parametrizzare k e g'''
+        # fig, axes = plt.subplots(k, g, sharex = True, figsize=(100,100))
+        # fig.suptitle(mese)
+        # s = 0
+        # for zona in df['Borough'].unique(): 
+        #         axes[s].set_title(zona)
+        #         sns.barplot(ax = axes[s], x = dati_mese_zona.index, y = dati_mese_zona[zona] )
+        #         s += 1
+        # plt.savefig(f"./Results/2020-{mese}/Subplot-Boroughs.pdf", dpi = 300)
+        # plt.close()
+        
+        for zona in df['Borough'].unique():
+            plt.figure()
+            dati_mese_zona[zona].plot.bar()
+            plt.title(zona)
+            plt.savefig(f"./Results/2020-0{i}-{zona}.pdf", dpi=300)
+            plt.close()
     
         gerarchia = pd.Series(collections.Counter(df['Borough']))
         plt.figure()
