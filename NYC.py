@@ -5,22 +5,22 @@ Created on Wed Dec  2 10:32:53 2020
 @author: lollo
 """
 
+
 """In quale periodo dell'anno i taxi vengono utilizzati di più? Creare un grafico che, per ogni mese, indichi il numero 
 medio di viaggi registrati ogni giorno. A causa delle differenze tra le zone di New York, vogliamo visualizzare le stesse
 informazioni per ogni borough. Notate qualche differenza tra di loro? Qual è il mese con la media giornaliera più alta? E 
 invece quello con la media giornaliera più bassa?"""
 
 
-#mettere argparse
 import pandas as pd
-#import memory_usage, time_elapsed, generalmente misuriamo le prestazioni 
 import matplotlib.pyplot as plt 
 import time 
 import collections
-from datetime import date,datetime
 import argparse
-import tqdm
 from abc import ABC, abstractmethod
+import calendar
+import os
+import seaborn as sns
 
         
    
@@ -50,25 +50,50 @@ class ExtractInfo(Extractor):
     def __init__(self):
         pass
     
-    def conta_corse_per_giorno(self,df):
+    def conta_corse_per_giorno(self,df,andamento,paragone_mesi):
         
         dati_mese_zona=pd.DataFrame()
         for zona in df['Borough'].unique():
             df_temp = df[df['Borough'] == zona]
-            dati_mese_zona[zona] = pd.Series(collections.Counter(df_temp['tpep_dropoff_datetime']))
+            dati_mese_zona[zona] = pd.Series(collections.Counter(df_temp['tpep_dropoff_datetime']))    
+        
+        andamento = pd.concat([andamento,pd.Series(collections.Counter(df['tpep_dropoff_datetime']))])
+        
+        paragone_mesi[mese] = pd.Series(len(df))
             
-        return dati_mese_zona
+        return dati_mese_zona, andamento, paragone_mesi
     
     
-    def crea_grafici(self,df,dati_mese_zona):
+    
+    
+    def crea_grafici(self,df,dati_mese_zona,mese):
         
         dati_mese_zona = dati_mese_zona.sort_index()
-        for zona in df['Borough'].unique():
-            plt.figure()
-            dati_mese_zona[zona].plot.bar()
-            plt.title(zona)
-            plt.savefig(f"./Results/2020-0{i}-{zona}.pdf", dpi=300)
-            plt.close()
+        plt.figure()
+        #PER LEONARDO: direi di parametrizzare k e g con argparse, perchè non è detto che il programma
+        #dovrà analizzare 6 mesi o città con 7 quartieri
+        k = 1
+        g = 7
+        fig, axes = plt.subplots(k, g, figsize=(100,50))
+        fig.suptitle(mese)
+        for zona in df['Borough'].unique(): 
+            for s in range(g):
+                #PER LEONARDO: c'è un problema con gli indici, e secondo me i subplot non verranno nemmeno bene
+                #per ora lo lascio così, dopo lo ricontrollo e vedo se riesco a risolverlo
+                sns.barplot(ax = axes[0,s], x = dati_mese_zona['Index'], y = dati_mese_zona[zona] )
+                axes[0,s].set_title(zona)
+        plt.savefig(f"./Results/2020-{mese}/Subplot_zone.pdf", dpi = 300)
+        plt.close()
+    
+        gerarchia = pd.Series(collections.Counter(df['Borough']))
+        plt.figure()
+        gerarchia.plot.bar()
+        plt.title(mese)
+        plt.savefig(f"./Results/2020-{mese}/Gerarchia.pdf", dpi = 300)
+        plt.close()
+
+
+    
     
     def data_cleaner(self,df):
         
@@ -86,7 +111,10 @@ class ExtractInfo(Extractor):
 
 
 #============================================__main__==============================================#
+
 start = time.perf_counter()
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-i1", "--mesi", help = "Mesi da analizzare",
@@ -98,29 +126,61 @@ parser.add_argument("-i2", "--zone", help = "Path del file dataset",
 parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
                      type = int, default = 2020)
 
+parser.add_argument("-o1", "--radice", help = "Cartella principale dei file di output",
+                     type = str, default = './Results/')
+
 args = parser.parse_args()
 
         
 zone = pd.read_csv(args.zone)
-zone = zone.rename({'LocationID': 'DOLocationID'}, axis=1)
+zone = zone.rename({'LocationID': 'DOLocationID'}, axis = 1)
 
+
+paragone_mesi = pd.DataFrame()
+andamento = pd.Series(dtype=object)
+
+
+#creo le cartelle per archiviare i file d'output se non esistono
+for i in args.mesi:
+    mese = calendar.month_name[int(i)]
+    path = args.radice + f'2020-{mese}/'
+    if not os.path.exists(path): 
+           os.makedirs(path)   
+    
 
 for i in args.mesi: 
     #preparazione dati
     df = pd.read_csv(f'./Data/yellow_tripdata_2020-0{i}.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
     
-    extractor=ExtractInfo()
-    df=extractor.data_cleaner(df)
+    mese = calendar.month_name[int(i)]
     
-    df = pd.merge(df, zone, on=['DOLocationID'],how='left')
+    extractor = ExtractInfo()
+    df = extractor.data_cleaner(df)
+    
+    df = pd.merge(df, zone, on=['DOLocationID'], how = 'left')
     
     #estrae il numero di corse per giorno nel mese dell'iterazione corrente
-    dati_mese_zona=extractor.conta_corse_per_giorno(df)
-    
+    dati_mese_zona, andamento, paragone_mesi = extractor.conta_corse_per_giorno(df, andamento, paragone_mesi)
     
     #salva nella cartella Results i grafici relativi al numero di corse giornaliere per ogni mese
-    extractor.crea_grafici(df,dati_mese_zona)
+    extractor.crea_grafici(df,dati_mese_zona,mese)
+ 
+
+#PER LEONARDO: questi due grafici li ho messi qui perchè hanno bisogno delle info di ogni mese,
+#li potremmo spostare in caso        
+plt.figure()
+paragone_mesi.plot.bar()
+plt.title('Andamento dei Viaggi')
+plt.savefig("./Results/Andamento_barplot.pdf", dpi = 300)
+plt.close()
+
    
+plt.figure()
+andamento.plot(x = 'Index', y = '0')
+plt.title('Andamento dei Viaggi')
+plt.savefig("./Results/Andamento_lineplot.pdf", dpi = 300)
+plt.close() 
+
 
 elapsed = time.perf_counter() - start
 
