@@ -20,8 +20,10 @@ import argparse
 from abc import ABC, abstractmethod
 import calendar
 import os
+from multiprocessing import Process
+import glob       
 
-        
+
    
 
 class Extractor(ABC):
@@ -40,13 +42,6 @@ class Extractor(ABC):
     def data_cleaner(self):
         pass
     
-    @abstractmethod
-    def crea_andamento(self):
-        pass
-    
-    @abstractmethod
-    def crea_directories(self): 
-        pass
 
     
 
@@ -57,38 +52,24 @@ class ExtractInfo(Extractor):
         pass
     
     
-    def crea_directories(self, args):
-        
-        #creo le cartelle per archiviare i file d'output se non esistono
-        for i in args.mesi:
-            mese = calendar.month_name[int(i)]
-            path = args.radice + f'2020-{mese}/'
-            if not os.path.exists(path): 
-                os.makedirs(path)   
-
-
-    
-    
-    def conta_corse_per_giorno(self, df, andamento, paragone_mesi):
+    def conta_corse_per_giorno(self, df, mese):
         
         dati_mese_zona=pd.DataFrame()
         for zona in df['Borough'].unique():
             df_temp = df[df['Borough'] == zona]
             dati_mese_zona[zona] = pd.Series(collections.Counter(df_temp['tpep_dropoff_datetime']))    
+         
+        andamento = pd.Series(collections.Counter(df['tpep_dropoff_datetime']))
+        andamento.to_csv(args.radice+f'Andamento_{mese}.csv')
         
-        andamento = pd.concat([andamento,pd.Series(collections.Counter(df['tpep_dropoff_datetime']))])
-        
-        paragone_mesi[mese] = pd.Series(len(df))
-            
-        return dati_mese_zona, andamento, paragone_mesi
+        return dati_mese_zona
     
     
     
     
-    def crea_grafici_mese(self, df, dati_mese_zona, mese):
+    def crea_grafici_mese(self, df, dati_mese_zona, mese, i):
         
         dati_mese_zona = dati_mese_zona.sort_index()
-        
         
         for zona in df['Borough'].unique():
             plt.figure()
@@ -104,28 +85,10 @@ class ExtractInfo(Extractor):
         plt.savefig(f"./Results/2020-{mese}/Gerarchia.pdf", dpi = 300)
         plt.close()
 
-
     
     
-    def crea_andamento(self, paragone_mesi, andamento):
         
-         plt.figure()
-         paragone_mesi.plot.bar()
-         plt.title('Andamento dei Viaggi')
-         plt.xlabel('Mesi')
-         plt.savefig("./Results/Andamento_barplot.pdf", dpi = 300)
-         plt.close()
-   
-         plt.figure()
-         andamento.plot(x = 'Index', y = '0')
-         plt.title('Andamento dei Viaggi')
-         plt.savefig("./Results/Andamento_lineplot.pdf", dpi = 300)
-         plt.close() 
-    
-    
-    
-    
-    def data_cleaner(self, df):
+    def data_cleaner(self, df, i):
         
         df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
 
@@ -140,6 +103,56 @@ class ExtractInfo(Extractor):
 
 
 
+def principale(zone, i):
+     
+     df = pd.read_csv(f'./Data/yellow_tripdata_2020-0{i}.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
+        
+     extractor=ExtractInfo()
+     df=extractor.data_cleaner(df,i)
+     
+     mese = calendar.month_name[int(i)]
+        
+     df = pd.merge(df, zone, on=['DOLocationID'],how='left')
+        
+     #estrae il numero di corse per giorno nel mese dell'iterazione corrente
+     dati_mese_zona=extractor.conta_corse_per_giorno(df, mese)
+     
+     #salva nella cartella Results i grafici relativi al numero di corse giornaliere per ogni mese
+     extractor.crea_grafici_mese(df, dati_mese_zona, mese, i)
+
+         
+
+
+def crea_directories(args):
+        
+        #creo le cartelle per archiviare i file d'output se non esistono
+        for i in args.mesi:
+            mese = calendar.month_name[int(i)]
+            path = args.radice + f'2020-{mese}/'
+            if not os.path.exists(path): 
+                os.makedirs(path)   
+
+
+
+
+def crea_andamento(andamento):
+        
+    # plt.figure()
+    # paragone_mesi.plot.bar()
+    # plt.title('Andamento dei Viaggi')
+    # plt.xlabel('Mesi')
+    # plt.savefig("./Results/Andamento_barplot.pdf", dpi = 300)
+    # plt.close()
+   
+    plt.figure()
+    andamento.plot(x = 'giorni', y = 'numero_viaggi')
+    plt.title('Andamento dei Viaggi')
+    plt.savefig("./Results/Andamento_lineplot.pdf", dpi = 300)
+    plt.close() 
+    
+    
+    
+    
 #============================================__main__==============================================#
 
 start = time.perf_counter()
@@ -150,14 +163,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i1", "--mesi", help = "Mesi da analizzare",
                      type = list, default = ['1', '2', '3', '4', '5', '6'])
 
-parser.add_argument("-i2", "--zone", help = "Path del file dataset",
+parser.add_argument("-i2", "--zone", help = "Path del dataset delle zone",
                      type = str, default = './Data/taxi+_zone_lookup.csv')
 
 parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
                      type = int, default = 2020)
 
-parser.add_argument("-i4", "--cores", help = "Core da utilizzare",
-                     type = int, default = os.cpu_count())
+#parser.add_argument("-i4", "--storage", help = "Cartella di posizionamento dei file csv temporanei",
+#                     type = str, default = './Informazioni/')
 
 parser.add_argument("-o1", "--radice", help = "Cartella principale dei file di output",
                      type = str, default = './Results/')
@@ -169,32 +182,33 @@ zone = pd.read_csv(args.zone)
 zone = zone.rename({'LocationID': 'DOLocationID'}, axis = 1)
 
 
-paragone_mesi = pd.DataFrame()
-andamento = pd.Series(dtype = object)
+#paragone_mesi = pd.DataFrame()
+#andamento = pd.Series(dtype = object)
+crea_directories(args)
 
 
-extractor = ExtractInfo()
-extractor.crea_directories(args)
-
-
-for i in args.mesi: 
-    #preparazione dati
-    df = pd.read_csv(f'./Data/yellow_tripdata_2020-0{i}.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
+if __name__ == '__main__':
     
-    mese = calendar.month_name[int(i)]
-      
-    df = extractor.data_cleaner(df)
-    
-    df = pd.merge(df, zone, on=['DOLocationID'], how = 'left')
-    
-    #estrae il numero di corse per giorno nel mese dell'iterazione corrente
-    dati_mese_zona, andamento, paragone_mesi = extractor.conta_corse_per_giorno(df, andamento, paragone_mesi)
-    
-    #salva nella cartella Results i grafici relativi al numero di corse giornaliere per ogni mese
-    extractor.crea_grafici_mese(df, dati_mese_zona, mese)
- 
+    thrs = [Process(target=principale,args=(zone,i+1)) for i in range(int(len(args.mesi)))]
+    for t in thrs:
+        t.start()
+        # aspetta che terminin
+    for t, i in zip(thrs, range(6)):
+        t.join()
 
-extractor.crea_andamento(paragone_mesi, andamento)
+
+files = glob.glob(os.path.join(args.radice, "Andamento_*.csv"))
+df_per_file = (pd.read_csv(f, sep=',') for f in files)
+andamento = pd.concat(df_per_file, ignore_index=True)
+andamento = andamento.rename({'Unnamed: 0' : 'giorni', '0': 'numero_viaggi'}, axis = 1)
+andamento['giorni'] = pd.to_datetime(andamento['giorni'])
+andamento['giorni'] = andamento['giorni'].dt.date
+andamento = andamento.sort_values(by=['giorni'])
+plt.figure()
+andamento.plot(x = 'giorni', y = 'numero_viaggi')
+plt.title('Andamento dei Viaggi')
+plt.savefig("./Results/Andamento_lineplot.pdf", dpi = 300)
+plt.close()    
 
 
 elapsed = time.perf_counter() - start
