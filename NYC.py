@@ -54,6 +54,11 @@ class ExtractInfo(Extractor):
     
     def conta_corse_per_giorno(self, df, mese, args):
         
+        '''function che estrapola le informazioni dal dataset: viene calcolato il numero di viaggi giornaliero per
+           ogni zona e mese, che verrà utilizzato per i grafici. Dato che questa funzione viene chiamata in processi 
+           contemporanei, le informazioni per la creazione dell'andamento vengono salvate in file .csv e poste in una
+           cartella apposita.'''
+        
         dati_mese_zona=pd.DataFrame()
         for zona in df['Borough'].unique():
             df_temp = df[df['Borough'] == zona]
@@ -69,6 +74,11 @@ class ExtractInfo(Extractor):
     
     
     def crea_grafici_mese(self, df, dati_mese_zona, mese, i):
+        
+        '''La function crea dei barplot per ogni zona della città: sull'ascissa sono posti i giorni del mese,
+           sull'ordinata il numero di corse giornaliero. Inoltre, i plot 'gerarchici' mostrano l'importanza, in termini
+           di corse, di ciascuna zona nel mese considerato. I grafici vengono salvati nella cartella specifica del mese
+           nella directory designata come output.'''
         
         dati_mese_zona = dati_mese_zona.sort_index()
         
@@ -91,6 +101,10 @@ class ExtractInfo(Extractor):
         
     def data_cleaner(self, df, i):
         
+        '''La function pulisce e rende utilizzabile i dataset importati. Vengono scartate le righe con valori NaN e
+           selezionate le informazioni richieste. Inoltre, il dtype delle colonne contenenti date viene settato a 
+           date.'''
+        
         df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
 
         df = df.dropna(axis = 0, how = 'any')
@@ -105,42 +119,50 @@ class ExtractInfo(Extractor):
 
 
 def principale(zone, i):
+    
+    '''La function sarà l'obiettivo della parallelizzazione: chiama tutti i sottoprogrammi necessari al corretto 
+       svolgimento del singolo processo'''
      
-     df = pd.read_csv(f'./Data/yellow_tripdata_2020-0{i}.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
+    df = pd.read_csv(f'./Data/yellow_tripdata_2020-0{i}.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
         
-     extractor=ExtractInfo()
-     df=extractor.data_cleaner(df,i)
-     
-     mese = calendar.month_name[int(i)]
-        
-     df = pd.merge(df, zone, on=['DOLocationID'],how='left')
-        
-     #estrae il numero di corse per giorno nel mese dell'iterazione corrente
-     dati_mese_zona=extractor.conta_corse_per_giorno(df, mese, args)
-     
-     #salva nella cartella Results i grafici relativi al numero di corse giornaliere per ogni mese
-     extractor.crea_grafici_mese(df, dati_mese_zona, mese, i)
+    extractor=ExtractInfo()
+    df=extractor.data_cleaner(df,i)
+    
+    mese = calendar.month_name[int(i)]
+       
+    df = pd.merge(df, zone, on=['DOLocationID'],how='left')
+       
+    #estrae il numero di corse per giorno nel mese dell'iterazione corrente
+    dati_mese_zona=extractor.conta_corse_per_giorno(df, mese, args)
+    
+    #salva nella cartella Results i grafici relativi al numero di corse giornaliere per ogni mese
+    extractor.crea_grafici_mese(df, dati_mese_zona, mese, i)
 
          
 
 
 def crea_directories(args):
+    
+    '''La function crea le directories necessarie per il funzionamento del programma.'''
         
-        #creo le cartelle per archiviare i file d'output se non esistono
-        for i in args.mesi:
-            mese = calendar.month_name[int(i)]
-            path = args.radice + f'2020-{mese}/'
-            if not os.path.exists(path): 
-                os.makedirs(path)   
-        
-        if not os.path.exists(args.storage): 
-             os.makedirs(args.storage)
+    #creo le cartelle per archiviare i file d'output se non esistono
+    for i in args.mesi:
+        mese = calendar.month_name[int(i)]
+        path = args.radice + f'{args.anno}-{mese}/'
+        if not os.path.exists(path): 
+            os.makedirs(path)   
+    
+    if not os.path.exists(args.storage): 
+         os.makedirs(args.storage)
 
 
 
 
 def crea_andamento(andamento):
            
+    '''La function crea il grafico dell'andamento del numero delle corse, utilizzando la variabile ottenuta dalla
+       fusione dei dataset mensili temporanei creati durante i processi.'''
+    
     plt.figure()
     andamento.plot(x = 'giorni', y = 'numero_viaggi')
     plt.title('Andamento dei Viaggi')
@@ -151,6 +173,9 @@ def crea_andamento(andamento):
     
  
 def riordina_e_grafica(args):
+    
+    '''La function trova nella cartella Storage tutti i file creati durante i processi e li fonde nella variabile
+       unica andamento, che poi viene ordinata e passata alla funzione crea_andamento.'''
     
     files = glob.glob(os.path.join(args.storage, "Andamento_*.csv"))
     df_per_file = (pd.read_csv(f, sep=',') for f in files)
@@ -168,6 +193,7 @@ def riordina_e_grafica(args):
        
 #============================================__main__==============================================#
 
+#avvio contatore
 start = time.perf_counter()
 
 
@@ -203,6 +229,7 @@ if __name__ == '__main__':
     crea_directories(args)
     
     
+    #definizione dei processi paralleli
     thrs = [Process(target=principale,args=(zone,i+1)) for i in range(len(args.mesi))]
     for t in thrs:
         t.start()
