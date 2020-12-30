@@ -46,7 +46,7 @@ class Extractor(ABC):
     
 
 class ExtractInfo(Extractor):
-    
+    '''la classe contiene i metodi che svolgono le operazioni proncipali sul dataset'''
     
     def __init__(self):
         pass
@@ -122,7 +122,7 @@ def principale(zone, i):
     
     '''La function è il corpo principale del programma ed è necessaria parallelizzazione dei processi: chiama tutti i sottoprogrammi ed i metodi necessari al corretto 
        svolgimento del singolo processo. La function verrà eseguita tante volte quanti sono i processi. Il numero di processi dipende dal numero di mesi che sui quali 
-       si vuole effettuare l'analisi. Di default il programma effettua l'analisi su 6 mesi (da gennaio 2020 a giugno 2020 '''
+       si vuole effettuare l'analisi. Di default il programma effettua l'analisi su 6 mesi (da gennaio 2020 a giugno 2020)  '''
      
     df = pd.read_csv(f'./Data_test/yellow_tripdata_2020-0{i}_test.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
         
@@ -202,7 +202,7 @@ parser = argparse.ArgumentParser()
 
     
 parser.add_argument("-i1", "--mesi", help = "Mesi da analizzare",
-                 type = list, default = ['1', '2', '3', '4', '5', '6'])
+                 type = list, default = ['1', '2' , '3', '4', '5', '6'])
 
 parser.add_argument("-i2", "--zone", help = "Path del dataset delle zone",
                  type = str, default = './Data_test/taxi+_zone_lookup.csv')
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     for t in thrs:
         t.start()
         # aspetta che terminin
-    for t, i in zip(thrs, range(len(args.mesi))):
+    for t in thrs:
         t.join()
 
 
