@@ -54,7 +54,7 @@ class ExtractInfo(Extractor):
     
     def conta_corse_per_giorno(self, df, mese, args):
         
-        '''function che estrapola le informazioni dal dataset: viene calcolato il numero di viaggi giornaliero per
+        '''Metodo che estrapola le informazioni dal dataset: viene calcolato il numero di viaggi giornaliero per
            ogni zona e mese, che verrà utilizzato per i grafici. Dato che questa funzione viene chiamata in processi 
            contemporanei, le informazioni per la creazione dell'andamento vengono salvate in file .csv e poste in una
            cartella apposita.'''
@@ -75,7 +75,7 @@ class ExtractInfo(Extractor):
     
     def crea_grafici_mese(self, df, dati_mese_zona, mese, i):
         
-        '''La function crea dei barplot per ogni zona della città: sull'ascissa sono posti i giorni del mese,
+        '''Il metodo crea dei barplot per ogni zona della città: sull'ascissa sono posti i giorni del mese,
            sull'ordinata il numero di corse giornaliero. Inoltre, i plot 'gerarchici' mostrano l'importanza, in termini
            di corse, di ciascuna zona nel mese considerato. I grafici vengono salvati nella cartella specifica del mese
            nella directory designata come output.'''
@@ -101,7 +101,7 @@ class ExtractInfo(Extractor):
         
     def data_cleaner(self, df, i):
         
-        '''La function pulisce e rende utilizzabile i dataset importati. Vengono scartate le righe con valori NaN e
+        '''Il metodo pulisce e rende utilizzabile i dataset importati. Vengono scartate le righe con valori NaN e
            selezionate le informazioni richieste. Inoltre, il dtype delle colonne contenenti date viene settato a 
            date.'''
         
@@ -120,10 +120,11 @@ class ExtractInfo(Extractor):
 
 def principale(zone, i):
     
-    '''La function sarà l'obiettivo della parallelizzazione: chiama tutti i sottoprogrammi necessari al corretto 
-       svolgimento del singolo processo'''
+    '''La function è il corpo principale del programma ed è necessaria parallelizzazione dei processi: chiama tutti i sottoprogrammi ed i metodi necessari al corretto 
+       svolgimento del singolo processo. La function verrà eseguita tante volte quanti sono i processi. Il numero di processi dipende dal numero di mesi che sui quali 
+       si vuole effettuare l'analisi. Di default il programma effettua l'analisi su 6 mesi (da gennaio 2020 a giugno 2020 '''
      
-    df = pd.read_csv(f'./Data/yellow_tripdata_2020-0{i}.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
+    df = pd.read_csv(f'./Data_test/yellow_tripdata_2020-0{i}_test.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
         
     extractor=ExtractInfo()
     df=extractor.data_cleaner(df,i)
@@ -204,7 +205,7 @@ parser.add_argument("-i1", "--mesi", help = "Mesi da analizzare",
                  type = list, default = ['1', '2', '3', '4', '5', '6'])
 
 parser.add_argument("-i2", "--zone", help = "Path del dataset delle zone",
-                 type = str, default = './Data/taxi+_zone_lookup.csv')
+                 type = str, default = './Data_test/taxi+_zone_lookup.csv')
 
 parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
                  type = int, default = 2020)
