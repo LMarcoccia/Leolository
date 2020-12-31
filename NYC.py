@@ -211,7 +211,7 @@ parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
                  type = int, default = 2020)
 
 parser.add_argument("-i4", "--dati", help = "Cartella di posizionamento dei dataset iniziali",
-                 type = str, default = './Data')
+                 type = str, default = './Data_test')
 
 parser.add_argument("-o1", "--storage", help = "Cartella di posizionamento dei file csv temporanei",
                  type = str, default = './Storage')
