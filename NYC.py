@@ -2,7 +2,7 @@
 """
 Created on Wed Dec  2 10:32:53 2020
 
-@author: lollo
+@author: Leonardo Furia - Lorenzo Marcoccia 
 """
 
 
@@ -65,7 +65,7 @@ class ExtractInfo(Extractor):
             dati_mese_zona[zona] = pd.Series(collections.Counter(df_temp['tpep_dropoff_datetime']))    
          
         andamento = pd.Series(collections.Counter(df['tpep_dropoff_datetime']))
-        path = args.storage + f'Andamento_{mese}.csv'
+        path = args.storage + f'/Andamento_{mese}.csv'
         andamento.to_csv(path)
         
         return dati_mese_zona
@@ -73,7 +73,7 @@ class ExtractInfo(Extractor):
     
     
     
-    def crea_grafici_mese(self, df, dati_mese_zona, mese, i):
+    def crea_grafici_mese(self, df, dati_mese_zona, mese, i, args):
         
         '''Il metodo crea dei barplot per ogni zona della città: sull'ascissa sono posti i giorni del mese,
            sull'ordinata il numero di corse giornaliero. Inoltre, i plot 'gerarchici' mostrano l'importanza, in termini
@@ -86,14 +86,14 @@ class ExtractInfo(Extractor):
             plt.figure()
             dati_mese_zona[zona].plot.bar()
             plt.title(zona)
-            plt.savefig(f"./Results/2020-{mese}/{zona}.pdf", dpi=300)
+            plt.savefig(args.radice + f"/2020-{mese}/{zona}.pdf", dpi=300)
             plt.close()
     
         gerarchia = pd.Series(collections.Counter(df['Borough']))
         plt.figure()
         gerarchia.plot.bar()
         plt.title(mese)
-        plt.savefig(f"./Results/2020-{mese}/Gerarchia.pdf", dpi = 300)
+        plt.savefig(args.radice + f"/2020-{mese}/Gerarchia.pdf", dpi = 300)
         plt.close()
 
     
@@ -118,16 +118,16 @@ class ExtractInfo(Extractor):
 
 
 
-def principale(zone, i):
+def principale(zone, i, args):
     
     '''La function è il corpo principale del programma ed è necessaria parallelizzazione dei processi: chiama tutti i sottoprogrammi ed i metodi necessari al corretto 
        svolgimento del singolo processo. La function verrà eseguita tante volte quanti sono i processi. Il numero di processi dipende dal numero di mesi che sui quali 
        si vuole effettuare l'analisi. Di default il programma effettua l'analisi su 6 mesi (da gennaio 2020 a giugno 2020)  '''
      
-    df = pd.read_csv(f'./Data_test/yellow_tripdata_2020-0{i}_test.csv',usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
+    df = pd.read_csv(args.dati + f'/yellow_tripdata_2020-0{i}.csv', usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
         
     extractor=ExtractInfo()
-    df=extractor.data_cleaner(df,i)
+    df=extractor.data_cleaner(df, i)
     
     mese = calendar.month_name[int(i)]
        
@@ -137,7 +137,7 @@ def principale(zone, i):
     dati_mese_zona=extractor.conta_corse_per_giorno(df, mese, args)
     
     #salva nella cartella Results i grafici relativi al numero di corse giornaliere per ogni mese
-    extractor.crea_grafici_mese(df, dati_mese_zona, mese, i)
+    extractor.crea_grafici_mese(df, dati_mese_zona, mese, i, args)
 
          
 
@@ -149,7 +149,7 @@ def crea_directories(args):
     #creo le cartelle per archiviare i file d'output se non esistono
     for i in args.mesi:
         mese = calendar.month_name[int(i)]
-        path = args.radice + f'{args.anno}-{mese}/'
+        path = args.radice + f'/{args.anno}-{mese}/'
         if not os.path.exists(path): 
             os.makedirs(path)   
     
@@ -159,7 +159,7 @@ def crea_directories(args):
 
 
 
-def crea_andamento(andamento):
+def crea_andamento(andamento, args):
            
     '''La function crea il grafico dell'andamento del numero delle corse, utilizzando la variabile ottenuta dalla
        fusione dei dataset mensili temporanei creati durante i processi.'''
@@ -167,7 +167,7 @@ def crea_andamento(andamento):
     plt.figure()
     andamento.plot(x = 'giorni', y = 'numero_viaggi')
     plt.title('Andamento dei Viaggi')
-    plt.savefig("./Results/Andamento_lineplot.pdf", dpi = 300)
+    plt.savefig(args.radice + "/Andamento_lineplot.pdf", dpi = 300)
     plt.close() 
     
     
@@ -176,7 +176,7 @@ def crea_andamento(andamento):
 def riordina_e_grafica(args):
     
     '''La function trova nella cartella Storage tutti i file creati durante i processi e li fonde nella variabile
-       unica andamento, che poi viene ordinata e passata alla funzione crea_andamento.'''
+       unica 'andamento', che poi viene ordinata e passata alla funzione crea_andamento.'''
     
     files = glob.glob(os.path.join(args.storage, "Andamento_*.csv"))
     df_per_file = (pd.read_csv(f, sep=',') for f in files)
@@ -187,7 +187,7 @@ def riordina_e_grafica(args):
     andamento['giorni'] = andamento['giorni'].dt.date
     andamento = andamento.sort_values(by=['giorni'])
     
-    crea_andamento(andamento)
+    crea_andamento(andamento, args)
 
 
 
@@ -202,7 +202,7 @@ parser = argparse.ArgumentParser()
 
     
 parser.add_argument("-i1", "--mesi", help = "Mesi da analizzare",
-                 type = list, default = ['1', '2' , '3', '4', '5', '6'])
+                 type = list, default = ['1', '2', '3', '4', '5', '6'])
 
 parser.add_argument("-i2", "--zone", help = "Path del dataset delle zone",
                  type = str, default = './Data_test/taxi+_zone_lookup.csv')
@@ -210,11 +210,14 @@ parser.add_argument("-i2", "--zone", help = "Path del dataset delle zone",
 parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
                  type = int, default = 2020)
 
+parser.add_argument("-i4", "--dati", help = "Cartella di posizionamento dei dataset iniziali",
+                 type = str, default = './Data')
+
 parser.add_argument("-o1", "--storage", help = "Cartella di posizionamento dei file csv temporanei",
-                 type = str, default = './Storage/')
+                 type = str, default = './Storage')
 
 parser.add_argument("-o2", "--radice", help = "Cartella principale dei file di output",
-                 type = str, default = './Results/')
+                 type = str, default = './Results')
 
 
 args = parser.parse_args()
@@ -231,10 +234,10 @@ if __name__ == '__main__':
     
     
     #definizione dei processi paralleli
-    thrs = [Process(target=principale,args=(zone,i+1)) for i in range(len(args.mesi))]
+    thrs = [Process(target=principale,args=(zone, i, args)) for i in args.mesi]
     for t in thrs:
         t.start()
-        # aspetta che terminin
+        # aspetta che termini
     for t in thrs:
         t.join()
 
