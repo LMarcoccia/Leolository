@@ -23,10 +23,15 @@ In uscita vengono prodotti dei grafici che aiutano l'utente a visualizzare grafi
 L'ANALISI VIENE IMPOSTATA SUI SEGUENTI PARAMETRI DI DEFAULT:
 
 -mesi da Gennaio a Giugno (['1','2','3','4','5','6'])
+
 -anno 2020
+
 -path del dataset di test relativo alle corse dei taxi: ./Data_test
+
 -path del dataset delle zone: './Data_test/taxi+_zone_lookup.csv'
+
 -path di output dei dati: cartella ./Results 
+
 -path di output della cartella di posizionamento dei dataset intermedi: ./Storage
 
 
