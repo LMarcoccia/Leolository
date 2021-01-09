@@ -2,13 +2,12 @@
 Repository per gli esercizi del Prof. Guarrasi
 
 Progetto Taxi
-Il programma riceve una lista di mesi e analizza i dataset in formato csv a essi riferiti, contenuti nella cartella Data. Ad esempio l'utente può inserire in input la seguente lista ['1','2','3','4'] ed il programma importa i dataset associati ad i mesi specificati nella lista effettuando le analisi nel periodo che va da Gennaio ad Aprile.
+Il programma riceve una lista di mesi e analizza i dataset in formato csv a essi riferiti, contenuti nella cartella Data. Ad esempio l'utente può inserire in input la seguente lista specificando da terminale --mesi "1234" ed il programma importa i dataset associati ad i mesi specificati nella lista effettuando le analisi nel periodo che va da Gennaio ad Aprile.
 Viene inoltre importato un dataset contenente le informazioni per il riconoscimento degli ID delle zone, che verranno aggiunte tramite merge al dataframe contenente le informazioni sui viaggi. 
 L'utente può infine specificare in input le seguenti informazioni:
--anno sul quale si vuole effettuare l'analisi
--path del dataset delle zone
--path della cartella contenente i dataset relativi alle corse dei taxi
--path di output dei dati
+-path del dataset delle zone specificando --zone "path"
+-path della cartella contenente i dataset relativi alle corse dei taxi  specificando --dati "path"
+-path di output dei dati specificando 
 
 Prima della fase iniziale di pulizia dati il codice crea delle directories nella cartella Results, al fine di rendere l'organizzazione degli output ordinata. Viene creato unfolder per ogni mese qualora non fosse già stato creato. 
 Viene creata anche una cartella per il posizionamento dei dataset intermedi (creati in ogni processo), chiamata Storage. Questi dataset contengono le informazioni sui viaggi giornalieri per ciascun mese.
@@ -22,7 +21,7 @@ In uscita vengono prodotti dei grafici che aiutano l'utente a visualizzare grafi
 
 L'ANALISI VIENE IMPOSTATA SUI SEGUENTI PARAMETRI DI DEFAULT:
 
--mesi da Gennaio a Giugno (['1','2','3','4','5','6'])
+-mesi da Gennaio a Giugno ("123456")
 
 -anno 2020
 
