@@ -109,7 +109,7 @@ class ExtractInfo(Extractor):
 
         df = df.dropna(axis = 0, how = 'any')
     
-        df = df.loc[(df['tpep_dropoff_datetime'].dt.year == args.anno) & (df['tpep_dropoff_datetime'].dt.month  == int(i))]
+        df = df.loc[(df['tpep_dropoff_datetime'].dt.year == 2020) & (df['tpep_dropoff_datetime'].dt.month  == int(i))]
 
         df['tpep_dropoff_datetime'] = df['tpep_dropoff_datetime'].dt.date
         
@@ -149,7 +149,7 @@ def crea_directories(args):
     #creo le cartelle per archiviare i file d'output se non esistono
     for i in args.mesi:
         mese = calendar.month_name[int(i)]
-        path = args.radice + f'/{args.anno}-{mese}/'
+        path = args.radice + f'/{2020}-{mese}/'
         if not os.path.exists(path): 
             os.makedirs(path)   
     
@@ -202,13 +202,13 @@ parser = argparse.ArgumentParser()
 
     
 parser.add_argument("-i1", "--mesi", help = "Mesi da analizzare",
-                 type = list, default = ['1', '2', '3', '4', '5', '6'])
+                 type = list, default = '123456')
 
 parser.add_argument("-i2", "--zone", help = "Path del dataset delle zone",
                  type = str, default = './Data_test/taxi+_zone_lookup.csv')
 
-parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
-                 type = int, default = 2020)
+#parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
+ #                type = int, default = 2020)
 
 parser.add_argument("-i4", "--dati", help = "Cartella di posizionamento dei dataset iniziali",
                  type = str, default = './Data_test')
