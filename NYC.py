@@ -65,7 +65,7 @@ class ExtractInfo(Extractor):
             dati_mese_zona[zona] = pd.Series(collections.Counter(df_temp['tpep_dropoff_datetime']))    
          
         andamento = pd.Series(collections.Counter(df['tpep_dropoff_datetime']))
-        path = args.storage + f'/Andamento_{mese}.csv'
+        path = args.storage + f'/Andamento_{mese}-{args.anno}.csv'
         andamento.to_csv(path)
         
         return dati_mese_zona
@@ -86,14 +86,14 @@ class ExtractInfo(Extractor):
             plt.figure()
             dati_mese_zona[zona].plot.bar()
             plt.title(zona)
-            plt.savefig(args.radice + f"/2020-{mese}/{zona}.pdf", dpi=300)
+            plt.savefig(args.radice + f"/{args.anno}-{mese}/{zona}.pdf", dpi=300)
             plt.close()
     
         gerarchia = pd.Series(collections.Counter(df['Borough']))
         plt.figure()
         gerarchia.plot.bar()
         plt.title(mese)
-        plt.savefig(args.radice + f"/2020-{mese}/Gerarchia.pdf", dpi = 300)
+        plt.savefig(args.radice + f"/{args.anno}-{mese}/Gerarchia.pdf", dpi = 300)
         plt.close()
 
     
@@ -109,7 +109,7 @@ class ExtractInfo(Extractor):
 
         df = df.dropna(axis = 0, how = 'any')
     
-        df = df.loc[(df['tpep_dropoff_datetime'].dt.year == 2020) & (df['tpep_dropoff_datetime'].dt.month  == int(i))]
+        df = df.loc[(df['tpep_dropoff_datetime'].dt.year == args.anno) & (df['tpep_dropoff_datetime'].dt.month  == int(i))]
 
         df['tpep_dropoff_datetime'] = df['tpep_dropoff_datetime'].dt.date
         
@@ -124,7 +124,7 @@ def principale(zone, i, args):
        svolgimento del singolo processo. La function verrà eseguita tante volte quanti sono i processi. Il numero di processi dipende dal numero di mesi che sui quali 
        si vuole effettuare l'analisi. Di default il programma effettua l'analisi su 6 mesi (da gennaio 2020 a giugno 2020)  '''
      
-    df = pd.read_csv(args.dati + f'/yellow_tripdata_2020-0{i}.csv', usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
+    df = pd.read_csv(args.dati + f'/yellow_tripdata_{args.anno}-0{i}.csv', usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
         
     extractor=ExtractInfo()
     df=extractor.data_cleaner(df, i)
@@ -149,7 +149,7 @@ def crea_directories(args):
     #creo le cartelle per archiviare i file d'output se non esistono
     for i in args.mesi:
         mese = calendar.month_name[int(i)]
-        path = args.radice + f'/{2020}-{mese}/'
+        path = args.radice + f'/{args.anno}-{mese}/'
         if not os.path.exists(path): 
             os.makedirs(path)   
     
@@ -167,7 +167,7 @@ def crea_andamento(andamento, args):
     plt.figure()
     andamento.plot(x = 'giorni', y = 'numero_viaggi')
     plt.title('Andamento dei Viaggi')
-    plt.savefig(args.radice + "/Andamento_lineplot.pdf", dpi = 300)
+    plt.savefig(args.radice + f"/Andamento_lineplot_{args.anno}.pdf", dpi = 300)
     plt.close() 
     
     
@@ -207,8 +207,8 @@ parser.add_argument("-i1", "--mesi", help = "Mesi da analizzare",
 parser.add_argument("-i2", "--zone", help = "Path del dataset delle zone",
                  type = str, default = './Data_test/taxi+_zone_lookup.csv')
 
-#parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
- #                type = int, default = 2020)
+parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
+                 type = int, default = 2020)
 
 parser.add_argument("-i4", "--dati", help = "Cartella di posizionamento dei dataset iniziali",
                  type = str, default = './Data_test')
