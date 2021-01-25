@@ -123,9 +123,12 @@ def principale(zone, i, args):
     '''La function è il corpo principale del programma ed è necessaria parallelizzazione dei processi: chiama tutti i sottoprogrammi ed i metodi necessari al corretto 
        svolgimento del singolo processo. La function verrà eseguita tante volte quanti sono i processi. Il numero di processi dipende dal numero di mesi che sui quali 
        si vuole effettuare l'analisi. Di default il programma effettua l'analisi su 6 mesi (da gennaio 2020 a giugno 2020)  '''
-     
-    df = pd.read_csv(args.dati + f'/yellow_tripdata_{args.anno}-0{i}.csv', usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
-        
+    
+    try:    
+       df = pd.read_csv(args.dati + f'/yellow_tripdata_{args.anno}-0{i}.csv', usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
+    except:
+       FileNotFoundError('Il dataset specificato non è stato trovato in memoria!') 
+       
     extractor=ExtractInfo()
     df=extractor.data_cleaner(df, i)
     
@@ -205,13 +208,13 @@ parser.add_argument("-i1", "--mesi", help = "Mesi da analizzare",
                  type = list, default = '123456')
 
 parser.add_argument("-i2", "--zone", help = "Path del dataset delle zone",
-                 type = str, default = './Data_test/taxi+_zone_lookup.csv')
+                 type = str, default = './Data/taxi+_zone_lookup.csv')
 
 parser.add_argument("-i3", "--anno", help = "Anno da analizzare",
                  type = int, default = 2020)
 
 parser.add_argument("-i4", "--dati", help = "Cartella di posizionamento dei dataset iniziali",
-                 type = str, default = './Data_test')
+                 type = str, default = './Data')
 
 parser.add_argument("-o1", "--storage", help = "Cartella di posizionamento dei file csv temporanei",
                  type = str, default = './Storage')
