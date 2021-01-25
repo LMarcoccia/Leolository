@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 import calendar
 import os
 from multiprocessing import Process
-import glob       
+import glob    
 
 
    
@@ -123,12 +123,9 @@ def principale(zone, i, args):
     '''La function è il corpo principale del programma ed è necessaria parallelizzazione dei processi: chiama tutti i sottoprogrammi ed i metodi necessari al corretto 
        svolgimento del singolo processo. La function verrà eseguita tante volte quanti sono i processi. Il numero di processi dipende dal numero di mesi che sui quali 
        si vuole effettuare l'analisi. Di default il programma effettua l'analisi su 6 mesi (da gennaio 2020 a giugno 2020)  '''
-    
-    try:    
-       df = pd.read_csv(args.dati + f'/yellow_tripdata_{args.anno}-0{i}.csv', usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
-    except:
-       FileNotFoundError('Il dataset specificato non è stato trovato in memoria!') 
-       
+     
+    df = pd.read_csv(args.dati + f'/yellow_tripdata_{args.anno}-0{i}.csv', usecols = ['tpep_dropoff_datetime', 'DOLocationID'])
+     
     extractor=ExtractInfo()
     df=extractor.data_cleaner(df, i)
     
